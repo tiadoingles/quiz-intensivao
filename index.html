@@ -214,9 +214,22 @@ function show(id) {
   avisarAltura();
 }
 function irParaTopo() {
-  // dentro da Cademí o iframe cresce com o conteúdo, então quem rola é a página da Cademí
-  if (window.parentIFrame) { try { window.parentIFrame.scrollToOffset(0, 0); return; } catch (e) {} }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Dentro da Cademí o iframe cresce com o conteúdo, então quem rola é a página da Cademí.
+  // Só rola se o topo do quiz saiu da tela, e para um pouco acima por causa da faixa fixa da Cademí.
+  const pf = window.parentIFrame;
+  if (pf && pf.getPageInfo) {
+    let feito = false;
+    try {
+      pf.getPageInfo(info => {
+        if (feito) return;
+        feito = true;
+        try { pf.getPageInfo(false); } catch (e) {}
+        if (info.offsetTop - info.scrollTop < 0) pf.scrollTo(0, Math.max(0, info.offsetTop - 170));
+      });
+      return;
+    } catch (e) {}
+  }
+  if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
