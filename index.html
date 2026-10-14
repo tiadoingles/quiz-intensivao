@@ -172,6 +172,8 @@ body{font-family:'Inter',sans-serif;color:#222;-webkit-font-smoothing:antialiase
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- obrigatório para a Cademí exibir a página incorporada (ajusta a altura do iframe) -->
+<script src="https://core.cademi.com.br/assets/js/vendor/iframeResizer.contentWindow.min.js"></script>
 <script>
 /* ================== CONFIG ================== */
 const CONFIG = {
@@ -209,8 +211,13 @@ const state = { nome: '', email: '', whatsapp: '', i: 0, resp: [] };
 
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  irParaTopo();
   avisarAltura();
+}
+function irParaTopo() {
+  // dentro da Cademí o iframe cresce com o conteúdo, então quem rola é a página da Cademí
+  if (window.parentIFrame) { try { window.parentIFrame.scrollToOffset(0, 0); return; } catch (e) {} }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
@@ -234,11 +241,16 @@ function iniciar() {
     const salvo = JSON.parse(localStorage.getItem('quiz-intensivao-aluna') || 'null');
     if (salvo) { $('i-nome').value = salvo.nome || ''; $('i-email').value = salvo.email || ''; $('i-whats').value = salvo.whatsapp || ''; }
   } catch (e) {}
+  // a Cademí manda os dados da aluna logada na URL (cuser_name, cuser_email, cuser_phone)
+  const cad = { 'i-nome': params.get('cuser_name'), 'i-email': params.get('cuser_email'), 'i-whats': params.get('cuser_phone') };
+  Object.entries(cad).forEach(([id, v]) => { if (v && v.trim()) $(id).value = v.trim(); });
+  if (cad['i-whats']) $('i-whats').dispatchEvent(new Event('input'));
   show('s-start');
 }
 
 $('i-whats').addEventListener('input', e => {
   let d = e.target.value.replace(/\D/g, '').slice(0, 13);
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2); // DDI do Brasil
   if (d.length > 11) { e.target.value = '+' + d; return; } // número com DDI
   if (d.length > 6) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
   else if (d.length > 2) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
@@ -287,7 +299,7 @@ $('q-opts').addEventListener('click', e => {
 $('b-back').addEventListener('click', () => { if (state.i > 0) { state.i--; renderPergunta(); } });
 $('b-next').addEventListener('click', () => {
   if (state.resp[state.i] === null) return;
-  if (state.i < QUIZ.perguntas.length - 1) { state.i++; renderPergunta(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (state.i < QUIZ.perguntas.length - 1) { state.i++; renderPergunta(); irParaTopo(); }
   else finalizar();
 });
 
