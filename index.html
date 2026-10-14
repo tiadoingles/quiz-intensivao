@@ -467,15 +467,13 @@ function telefoneValido() {
 }
 
 // recebe um número em qualquer formato (Cademí, preenchimento salvo) e separa DDI + número
+// Recebe o número da Cademí (ou o último que a aluna usou). O DDI começa SEMPRE no Brasil:
+// só preenche se for um número brasileiro válido; se não for, o campo fica vazio para ela digitar.
 function preencherTelefone(bruto) {
-  const temMais = String(bruto).trim().startsWith('+');
-  let d = String(bruto).replace(/\D/g, '');
-  if (!temMais && (d.length === 10 || d.length === 11)) { escolherDdi('55', 'BR'); $('i-whats').value = d; formatarTelefone(); return; }
-  if (!temMais && d.startsWith('00')) d = d.slice(2);
-  const ddis = [...new Set(PAISES.map(p => p[2]))].sort((a, b) => b.length - a.length);
-  const ddi = ddis.find(x => d.startsWith(x) && d.length - x.length >= 6);
-  if (ddi) { const p = PAISES.find(p => p[2] === ddi); escolherDdi(ddi, p && p[1]); $('i-whats').value = d.slice(ddi.length); }
-  else { escolherDdi('55', 'BR'); $('i-whats').value = d; }
+  escolherDdi('55', 'BR');
+  let d = String(bruto || '').replace(/\D/g, '').replace(/^0+/, '');
+  if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
+  $('i-whats').value = /^[1-9][1-9](9\d{8}|[2-5]\d{7})$/.test(d) ? d : '';
   formatarTelefone();
 }
 
