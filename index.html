@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Quiz — Intensivão Saia do Básico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#EA5167;--coral-l:#FFF0F3;--coral-d:#C93050;--navy:#1E2D5F;--navy-l:#EEF0F8;--mgray:#D5D7DE;--dgray:#555B6E;--green:#1AA060;--green-l:#E8F7F0;--bg:#F2F3F9;--white:#fff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);}
+body{font-family:'Inter',sans-serif;color:#222;-webkit-font-smoothing:antialiased;}
+.topbar{background:var(--navy);color:#fff;text-align:center;padding:9px 16px;font-size:11px;letter-spacing:.12em;font-weight:700;text-transform:uppercase;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 16px 40px;}
+.card{background:#fff;border-radius:20px;padding:28px 22px;box-shadow:0 8px 30px rgba(30,45,95,.07);}
+@media(min-width:560px){.card{padding:36px 34px;}}
+.screen{display:none;animation:fade .35s ease;}
+.screen.on{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.badge{display:inline-block;background:var(--coral-l);color:var(--coral);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:100px;}
+.hero{text-align:center;margin-bottom:24px;}
+.hero .badge{margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,6vw,38px);color:var(--navy);line-height:1.2;margin-bottom:10px;}
+.hero h1 em{font-style:italic;color:var(--coral);}
+.hero p{color:var(--dgray);font-size:15px;line-height:1.65;max-width:460px;margin:0 auto;}
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 4px;}
+.pill{background:var(--navy-l);color:var(--navy);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:100px;text-align:center;}
+
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.fg input{width:100%;padding:14px 16px;border:1.5px solid var(--mgray);border-radius:12px;font-size:16px;font-family:inherit;color:#222;outline:none;background:#fff;transition:border-color .2s;}
+.fg input:focus{border-color:var(--coral);}
+.fg input.bad{border-color:var(--coral-d);background:#FFF8F9;}
+.err{color:var(--coral-d);font-size:13px;font-weight:600;min-height:18px;margin:4px 0 8px;text-align:center;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 26px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:transform .15s,background .2s,opacity .2s;}
+.btn:active{transform:scale(.98);}
+.btn-p{background:var(--coral);color:#fff;box-shadow:0 6px 18px rgba(234,81,103,.28);}
+.btn-p:hover{background:var(--coral-d);}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+.btn-o{background:#fff;color:var(--navy);border:1.5px solid var(--mgray);}
+.btn-o:hover{border-color:var(--navy);}
+.btn-g{background:transparent;color:var(--dgray);padding:12px 10px;font-size:14px;}
+.btn-g:disabled{visibility:hidden;}
+.full{width:100%;}
+
+.prog{margin-bottom:22px;}
+.prog-meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--dgray);font-weight:600;margin-bottom:8px;}
+.prog-meta b{color:var(--coral);}
+.bar{height:8px;background:var(--navy-l);border-radius:100px;overflow:hidden;}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),#ff8a9a);border-radius:100px;transition:width .35s ease;}
+.q-num{font-size:12px;font-weight:700;color:var(--coral);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.q-text{font-size:clamp(19px,4.6vw,23px);font-weight:700;color:var(--navy);line-height:1.4;margin-bottom:22px;}
+.opts{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border:1.5px solid var(--mgray);border-radius:14px;background:#fff;font-size:16.5px;font-family:inherit;color:#222;cursor:pointer;transition:all .18s;line-height:1.4;}
+.opt:hover{border-color:var(--coral);background:#FFFBFC;}
+.opt .l{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--navy-l);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;transition:all .18s;}
+.opt.sel{border-color:var(--coral);background:var(--coral-l);box-shadow:0 0 0 3px rgba(234,81,103,.12);}
+.opt.sel .l{background:var(--coral);color:#fff;}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+
+.loader{text-align:center;padding:40px 0;}
+.spin{width:44px;height:44px;border:4px solid var(--navy-l);border-top-color:var(--coral);border-radius:50%;margin:0 auto 16px;animation:sp 0.9s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.loader p{color:var(--dgray);font-size:15px;}
+
+.res-head{text-align:center;margin-bottom:24px;}
+.res-head h2{font-family:'Playfair Display',serif;font-size:clamp(26px,5.6vw,34px);color:var(--navy);line-height:1.2;margin:12px 0 6px;}
+.res-head h2 em{color:var(--coral);font-style:italic;}
+.res-head p{color:var(--dgray);font-size:15px;line-height:1.6;}
+.score{width:150px;height:150px;margin:6px auto 4px;position:relative;}
+.score svg{width:100%;height:100%;transform:rotate(-90deg);}
+.score .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.score .n b{font-size:40px;font-weight:800;color:var(--navy);line-height:1;}
+.score .n span{font-size:13px;color:var(--dgray);font-weight:600;margin-top:4px;}
+.stats{display:flex;gap:10px;justify-content:center;margin:12px 0 4px;flex-wrap:wrap;}
+.stat{padding:8px 16px;border-radius:100px;font-size:13.5px;font-weight:700;text-align:center;}
+.stat.ok{background:var(--green-l);color:var(--green);}
+.stat.no{background:var(--coral-l);color:var(--coral-d);}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0 26px;}
+.actions .btn{font-size:15px;padding:14px 12px;}
+.sec-t{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dgray);margin-bottom:12px;}
+.rev{border:1.5px solid var(--mgray);border-radius:14px;padding:16px 16px 14px;margin-bottom:12px;break-inside:avoid;page-break-inside:avoid;}
+.rev.ok{border-color:#BFE6D2;background:#FAFEFC;}
+.rev.no{border-color:#F5C3CC;background:#FFFAFB;}
+.rev-top{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+.rev-ic{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;}
+.rev.ok .rev-ic{background:var(--green);}
+.rev.no .rev-ic{background:var(--coral);}
+.rev-q{font-size:15px;font-weight:700;color:var(--navy);line-height:1.45;}
+.rev-a{font-size:14.5px;line-height:1.5;padding-left:36px;margin-top:4px;color:#333;}
+.rev-a small{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dgray);margin-bottom:1px;}
+.rev-a.right b{color:var(--green);}
+.rev-a.wrong b{color:var(--coral-d);text-decoration:line-through;text-decoration-thickness:1.5px;}
+.who{font-size:13px;color:var(--dgray);text-align:center;margin-top:4px;}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:100px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:10;max-width:calc(100% - 32px);text-align:center;}
+.toast.on{opacity:1;transform:translateX(-50%);}
+.foot{text-align:center;font-size:12px;color:#9aa0b2;margin-top:18px;}
+.pdf-only{display:none;}
+.notfound{text-align:center;padding:20px 0;color:var(--dgray);}
+
+@media print{
+  .topbar,.actions,.foot,.toast,.no-print{display:none!important;}
+  body,html{background:#fff;}
+  .wrap{padding:0;max-width:none;}
+  .card{box-shadow:none;padding:0;}
+  .pdf-only{display:block;}
+}
+/* modo PDF (html2pdf): mesma aparência da impressão */
+.pdf-mode .actions,.pdf-mode .no-print{display:none!important;}
+.pdf-mode .pdf-only{display:block;}
+.pdf-mode.card{box-shadow:none;}
+</style>
+</head>
+<body>
+<div class="topbar">Plataforma Fluent Mind · Tia do Inglês</div>
+<div class="wrap">
+  <div class="card" id="card">
+
+    <!-- Capa -->
+    <section class="screen" id="s-start">
+      <div class="hero">
+        <span class="badge" id="h-badge">Quiz</span>
+        <h1 id="h-title">Intensivão <em>Saia do Básico</em></h1>
+        <p>Responda com calma, uma pergunta por vez. No final você vê sua nota e a correção completa.</p>
+        <div class="pills"><span class="pill" id="h-count">10 perguntas</span><span class="pill">≈ 5 minutos</span></div>
+      </div>
+      <form id="f-start" novalidate>
+        <div class="fg"><label for="i-nome">Nome completo</label><input id="i-nome" autocomplete="name" placeholder="Seu nome"></div>
+        <div class="fg"><label for="i-email">E-mail</label><input id="i-email" type="email" autocomplete="email" inputmode="email" placeholder="seuemail@exemplo.com"></div>
+        <div class="fg"><label for="i-whats">WhatsApp</label><input id="i-whats" type="tel" autocomplete="tel" inputmode="tel" placeholder="(11) 91234-5678"></div>
+        <div class="err" id="e-start"></div>
+        <button class="btn btn-p full" type="submit">Começar o quiz →</button>
+      </form>
+    </section>
+
+    <!-- Pergunta -->
+    <section class="screen" id="s-q">
+      <div class="prog">
+        <div class="prog-meta"><span>Pergunta <b id="p-n">1</b> de <span id="p-t">10</span></span><span id="p-pct">0%</span></div>
+        <div class="bar"><i id="p-bar" style="width:0"></i></div>
+      </div>
+      <div class="q-num" id="q-num">Pergunta 1</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="opts" id="q-opts" role="radiogroup"></div>
+      <div class="nav">
+        <button class="btn btn-g" id="b-back" type="button">← Voltar</button>
+        <button class="btn btn-p" id="b-next" type="button" disabled>Próxima →</button>
+      </div>
+    </section>
+
+    <!-- Enviando -->
+    <section class="screen" id="s-load">
+      <div class="loader"><div class="spin"></div><p>Corrigindo suas respostas…</p></div>
+    </section>
+
+    <!-- Resultado -->
+    <section class="screen" id="s-res">
+      <div id="res-body"></div>
+    </section>
+
+    <section class="screen" id="s-404">
+      <div class="notfound"><span class="badge">Quiz</span><h1 class="hero" style="font-family:'Playfair Display',serif;color:var(--navy);margin:14px 0 8px;font-size:26px">Quiz não encontrado</h1><p>Confira o link que você recebeu na plataforma.</p></div>
+    </section>
+  </div>
+  <div class="foot">© Tia do Inglês · Método Tia do Inglês</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== CONFIG ================== */
+const CONFIG = {
+  // URL do Web App do Apps Script da planilha "Respostas Quiz Intensivão Saia do Básico"
+  sheetUrl: '',
+  curso: 'Intensivão Saia do Básico'
+};
+
+/* Cada quiz: título + perguntas. "c" = índice (0, 1, 2…) da alternativa correta. */
+const QUIZZES = {
+  1: {
+    titulo: 'Quiz 1',
+    perguntas: [
+      { q: 'Qual a melhor resposta para "What\'s up?"', o: ["I'm fine thanks, and you?", "I'm working a lot", 'No, thanks'], c: 1 },
+      { q: 'Como dizer: "Eles vão estar em SP semana que vem"', o: ["They'll be in SP next week", 'They are in SP next week', 'They were in SP next week'], c: 0 },
+      { q: 'Como dizer: "Nós estávamos de férias em Cancún."', o: ['We are on vacation in Cancun.', 'We will be on vacation in Cancun.', 'We were on vacation in Cancun.'], c: 2 },
+      { q: 'Qual destas alternativas está correta?', o: ['An engineer, a eraser, a donut', 'An engineer, an apple, a donut', 'An engineers, an apples, a donuts'], c: 1 },
+      { q: 'Qual dessas frases está correta?', o: ['We love the Canada', "She's one years old", "They're teachers"], c: 2 },
+      { q: "Complete a frase: I'll be here ___", o: ['Yesterday', 'Last week', 'Tomorrow'], c: 2 },
+      { q: 'Complete corretamente: Paul ___ a teacher. He ___ working last night. Tomorrow he ___ with his family', o: ['was / was / is', 'is / was / will be', 'are / were / will be'], c: 1 },
+      { q: 'Como se diz: "Ouvi falar muito sobre você"', o: ["I've heard a lot about you.", 'I listen a lot of you', 'I know a lot about of you'], c: 0 },
+      { q: 'Como se diz: "Eu acho que conheço você"', o: ['I think I meet you.', 'I guess I knew you.', 'I think I know you.'], c: 2 },
+      { q: 'Como ficaria na interrogativa: "It is amazing."', o: ['Is it amazing?', 'It is amazing?', 'Does it amazing?'], c: 0 }
+    ]
+  }
+};
+
+/* ================== APP ================== */
+const $ = id => document.getElementById(id);
+const LETRAS = 'ABCDEFGH';
+const params = new URLSearchParams(location.search);
+const quizId = params.get('quiz') || '1';
+const QUIZ = QUIZZES[quizId];
+const state = { nome: '', email: '', whatsapp: '', i: 0, resp: [] };
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  avisarAltura();
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* Avisa a altura ao site-pai (iframe), para quem quiser ajustar automaticamente */
+function avisarAltura() {
+  requestAnimationFrame(() => {
+    try { parent.postMessage({ tipo: 'quiz-altura', altura: document.documentElement.scrollHeight }, '*'); } catch (e) {}
+  });
+}
+window.addEventListener('resize', avisarAltura);
+
+/* ---------- capa ---------- */
+function iniciar() {
+  if (!QUIZ) { show('s-404'); return; }
+  document.title = `${QUIZ.titulo} — ${CONFIG.curso}`;
+  $('h-badge').textContent = QUIZ.titulo;
+  $('h-count').textContent = `${QUIZ.perguntas.length} perguntas`;
+  state.resp = new Array(QUIZ.perguntas.length).fill(null);
+  try {
+    const salvo = JSON.parse(localStorage.getItem('quiz-intensivao-aluna') || 'null');
+    if (salvo) { $('i-nome').value = salvo.nome || ''; $('i-email').value = salvo.email || ''; $('i-whats').value = salvo.whatsapp || ''; }
+  } catch (e) {}
+  show('s-start');
+}
+
+$('i-whats').addEventListener('input', e => {
+  let d = e.target.value.replace(/\D/g, '').slice(0, 13);
+  if (d.length > 11) { e.target.value = '+' + d; return; } // número com DDI
+  if (d.length > 6) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
+  else if (d.length > 2) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  else e.target.value = d;
+});
+
+$('f-start').addEventListener('submit', e => {
+  e.preventDefault();
+  const nome = $('i-nome').value.trim(), email = $('i-email').value.trim(), whats = $('i-whats').value.trim();
+  const erros = [];
+  ['i-nome', 'i-email', 'i-whats'].forEach(id => $(id).classList.remove('bad'));
+  if (nome.split(/\s+/).length < 2 || nome.length < 4) { erros.push('Digite seu nome completo.'); $('i-nome').classList.add('bad'); }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { erros.push('Confira seu e-mail.'); $('i-email').classList.add('bad'); }
+  if (whats.replace(/\D/g, '').length < 10) { erros.push('Confira seu WhatsApp com DDD.'); $('i-whats').classList.add('bad'); }
+  $('e-start').textContent = erros[0] || '';
+  if (erros.length) return;
+  Object.assign(state, { nome, email: email.toLowerCase(), whatsapp: whats, i: 0 });
+  try { localStorage.setItem('quiz-intensivao-aluna', JSON.stringify({ nome, email, whatsapp: whats })); } catch (e) {}
+  renderPergunta();
+  show('s-q');
+});
+
+/* ---------- perguntas ---------- */
+function renderPergunta() {
+  const n = QUIZ.perguntas.length, p = QUIZ.perguntas[state.i];
+  $('p-n').textContent = state.i + 1; $('p-t').textContent = n;
+  const pct = Math.round(state.i / n * 100);
+  $('p-pct').textContent = pct + '%'; $('p-bar').style.width = pct + '%';
+  $('q-num').textContent = `Pergunta ${state.i + 1}`;
+  $('q-text').textContent = p.q;
+  $('q-opts').innerHTML = p.o.map((t, k) =>
+    `<button type="button" role="radio" class="opt${state.resp[state.i] === k ? ' sel' : ''}" data-k="${k}" aria-checked="${state.resp[state.i] === k}"><span class="l">${LETRAS[k]}</span><span>${esc(t)}</span></button>`
+  ).join('');
+  $('b-back').disabled = state.i === 0;
+  $('b-next').disabled = state.resp[state.i] === null;
+  $('b-next').textContent = state.i === n - 1 ? 'Ver meu resultado ✓' : 'Próxima →';
+  avisarAltura();
+}
+
+$('q-opts').addEventListener('click', e => {
+  const b = e.target.closest('.opt'); if (!b) return;
+  state.resp[state.i] = Number(b.dataset.k);
+  document.querySelectorAll('.opt').forEach(o => { const on = o === b; o.classList.toggle('sel', on); o.setAttribute('aria-checked', on); });
+  $('b-next').disabled = false;
+});
+$('b-back').addEventListener('click', () => { if (state.i > 0) { state.i--; renderPergunta(); } });
+$('b-next').addEventListener('click', () => {
+  if (state.resp[state.i] === null) return;
+  if (state.i < QUIZ.perguntas.length - 1) { state.i++; renderPergunta(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  else finalizar();
+});
+
+/* ---------- envio e resultado ---------- */
+function corrigir() {
+  const itens = QUIZ.perguntas.map((p, k) => ({
+    q: p.q, sua: p.o[state.resp[k]], certa: p.o[p.c], ok: state.resp[k] === p.c
+  }));
+  const acertos = itens.filter(x => x.ok).length;
+  return { itens, acertos, total: itens.length, nota: Math.round(acertos / itens.length * 100) };
+}
+
+async function enviar(r) {
+  if (!CONFIG.sheetUrl) { console.warn('CONFIG.sheetUrl vazio: resposta não enviada.'); return false; }
+  const payload = {
+    quiz: QUIZ.titulo,
+    cabecalho: QUIZ.perguntas.map((p, k) => `${k + 1}. ${p.q}`),
+    nome: state.nome, email: state.email, whatsapp: state.whatsapp,
+    respostas: r.itens.map(x => x.sua),
+    acertos: `${r.acertos}/${r.total}`, nota: r.nota
+  };
+  for (let t = 0; t < 3; t++) {
+    try {
+      const res = await fetch(CONFIG.sheetUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+      const j = await res.json();
+      if (j.ok) return true;
+    } catch (e) { console.warn('Falha ao enviar (tentativa ' + (t + 1) + ')', e); }
+    await new Promise(ok => setTimeout(ok, 1200 * (t + 1)));
+  }
+  return false;
+}
+
+let RESULTADO = null;
+async function finalizar() {
+  show('s-load');
+  RESULTADO = corrigir();
+  const espera = new Promise(ok => setTimeout(ok, 900));
+  const [enviado] = await Promise.all([enviar(RESULTADO), espera]);
+  RESULTADO.enviado = enviado;
+  renderResultado(RESULTADO);
+  show('s-res');
+}
+
+function mensagem(nota) {
+  if (nota === 100) return ['Perfeito', 'Você acertou tudo! Continue nesse ritmo.'];
+  if (nota >= 80) return ['Muito bem', 'Excelente resultado! Revise os pontos abaixo e siga em frente.'];
+  if (nota >= 60) return ['Bom trabalho', 'Você está no caminho. Revise as correções para fixar.'];
+  return ['Continue praticando', 'Errar faz parte do aprendizado. Revise as correções com calma.'];
+}
+
+function renderResultado(r) {
+  const [tit, txt] = mensagem(r.nota);
+  const primeiro = state.nome.split(/\s+/)[0];
+  const C = 2 * Math.PI * 64, off = C * (1 - r.nota / 100);
+  const data = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  $('res-body').innerHTML = `
+    <div class="res-head">
+      <span class="badge">${esc(QUIZ.titulo)} · ${esc(CONFIG.curso)}</span>
+      <h2>${esc(tit)}, <em>${esc(primeiro)}!</em></h2>
+      <p>${esc(txt)}</p>
+      <div class="score">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="64" fill="none" stroke="#EEF0F8" stroke-width="12"/>
+        <circle id="ring" cx="75" cy="75" r="64" fill="none" stroke="#EA5167" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" style="transition:stroke-dashoffset 1.1s ease"/></svg>
+        <div class="n"><b>${r.nota}</b><span>de 100 pontos</span></div>
+      </div>
+      <div class="stats"><span class="stat ok">✓ ${r.acertos} acerto${r.acertos === 1 ? '' : 's'}</span><span class="stat no">✗ ${r.total - r.acertos} erro${r.total - r.acertos === 1 ? '' : 's'}</span></div>
+      <p class="who pdf-only">${esc(state.nome)} · ${esc(state.email)} · ${esc(data)}</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-o" id="b-copy" type="button">📋 Copiar tudo</button>
+      <button class="btn btn-p" id="b-pdf" type="button">⬇ Baixar PDF</button>
+    </div>
+    <div class="sec-t">Correção</div>
+    ${r.itens.map((x, k) => `
+      <div class="rev ${x.ok ? 'ok' : 'no'}">
+        <div class="rev-top"><span class="rev-ic">${x.ok ? '✓' : '✗'}</span><div class="rev-q">${k + 1}. ${esc(x.q)}</div></div>
+        <div class="rev-a ${x.ok ? 'right' : 'wrong'}"><small>Sua resposta</small><b>${esc(x.sua)}</b></div>
+        ${x.ok ? '' : `<div class="rev-a right"><small>Resposta certa</small><b>${esc(x.certa)}</b></div>`}
+      </div>`).join('')}
+    <button class="btn btn-o full no-print" id="b-redo" type="button" style="margin-top:10px">↻ Refazer o quiz</button>`;
+  requestAnimationFrame(() => setTimeout(() => { const ring = $('ring'); if (ring) ring.style.strokeDashoffset = off; }, 60));
+  $('b-copy').onclick = copiar;
+  $('b-pdf').onclick = baixarPdf;
+  $('b-redo').onclick = () => { state.resp = new Array(QUIZ.perguntas.length).fill(null); state.i = 0; renderPergunta(); show('s-q'); };
+}
+
+function textoResultado(r) {
+  const linhas = [
+    `${QUIZ.titulo} — ${CONFIG.curso}`,
+    `Nome: ${state.nome}`,
+    `Data: ${new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`,
+    `Nota: ${r.nota}/100 (${r.acertos} de ${r.total} acertos)`,
+    ''
+  ];
+  r.itens.forEach((x, k) => {
+    linhas.push(`${k + 1}. ${x.q}`);
+    linhas.push(`   Sua resposta: ${x.sua} ${x.ok ? '✓' : '✗'}`);
+    if (!x.ok) linhas.push(`   Resposta certa: ${x.certa}`);
+    linhas.push('');
+  });
+  return linhas.join('\n').trim();
+}
+
+async function copiar() {
+  const txt = textoResultado(RESULTADO);
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {}
+  if (!ok) { // iframe sem permissão de área de transferência
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length);
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+  }
+  toast(ok ? 'Resultado copiado! ✓' : 'Não foi possível copiar automaticamente.');
+}
+
+function carregarScript(src) {
+  return new Promise((ok, falha) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = falha; document.head.appendChild(s); });
+}
+
+async function baixarPdf() {
+  const b = $('b-pdf'); const rot = b.textContent;
+  b.disabled = true; b.textContent = 'Gerando PDF…';
+  const card = $('card');
+  try {
+    if (!window.html2pdf) await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+    card.classList.add('pdf-mode');
+    const ring = $('ring'); if (ring) { ring.style.transition = 'none'; }
+    const nomeArq = `${QUIZ.titulo} - ${state.nome}`.replace(/[\\/:*?"<>|]/g, '') + '.pdf';
+    await html2pdf().set({
+      margin: [10, 10, 12, 10], filename: nomeArq,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'avoid-all'] }
+    }).from($('s-res')).save();
+    toast('PDF baixado ✓');
+  } catch (e) {
+    console.warn('PDF direto falhou, abrindo impressão', e);
+    toast('Escolha "Salvar como PDF" na janela de impressão.');
+    setTimeout(() => window.print(), 400);
+  } finally {
+    card.classList.remove('pdf-mode');
+    b.disabled = false; b.textContent = rot;
+  }
+}
+
+iniciar();
+</script>
+</body>
+</html>
