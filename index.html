@@ -36,6 +36,23 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);-webkit-font-smoo
 .fg input{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;color:var(--ink);outline:none;background:#fff;transition:border-color .2s,box-shadow .2s;}
 .fg input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(242,19,59,.12);}
 .fg input.bad{border-color:var(--red);background:var(--red-l);}
+.phone{display:flex;gap:8px;}
+.phone input{flex:1;min-width:0;}
+.ddi-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+.ddi-btn:hover{border-color:#a1a1aa;}
+.ddi-btn[aria-expanded="true"]{border-color:var(--red);box-shadow:0 0 0 3px rgba(242,19,59,.12);}
+.ddi-flag{font-size:19px;line-height:1;}
+.ddi-caret{font-size:11px;color:var(--mut);}
+.ddi-pop{margin-top:8px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px;box-shadow:0 8px 24px rgba(24,24,27,.08);}
+.ddi-pop input{padding:11px 13px;font-size:15px;}
+.ddi-list{list-style:none;max-height:240px;overflow-y:auto;margin-top:6px;}
+.ddi-list li{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;cursor:pointer;font-size:15px;color:var(--ink);}
+.ddi-list li:hover,.ddi-list li.act{background:var(--soft);}
+.ddi-list li.sel{background:var(--red-l);}
+.ddi-list li .f{font-size:19px;line-height:1;width:24px;text-align:center;}
+.ddi-list li .c{margin-left:auto;color:var(--mut);font-weight:600;font-variant-numeric:tabular-nums;}
+.ddi-list .vazio{color:var(--mut);cursor:default;justify-content:center;}
+.hint{font-size:12.5px;color:var(--mut);margin-top:6px;}
 .err{color:var(--red-d);font-size:13.5px;font-weight:600;min-height:18px;margin:4px 0 8px;text-align:center;}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:999px;font-size:15.5px;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:transform .15s,background .2s,border-color .2s,opacity .2s;}
@@ -135,7 +152,19 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);-webkit-font-smoo
       <form id="f-start" novalidate>
         <div class="fg"><label for="i-nome">Nome completo</label><input id="i-nome" autocomplete="name" placeholder="Seu nome"></div>
         <div class="fg"><label for="i-email">E-mail</label><input id="i-email" type="email" autocomplete="email" inputmode="email" placeholder="seuemail@exemplo.com"></div>
-        <div class="fg"><label for="i-whats">WhatsApp</label><input id="i-whats" type="tel" autocomplete="tel" inputmode="tel" placeholder="(11) 91234-5678"></div>
+        <div class="fg"><label for="i-whats">WhatsApp</label>
+          <div class="phone" id="phone">
+            <button type="button" class="ddi-btn" id="ddi-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Código do país">
+              <span class="ddi-flag" id="ddi-flag">🇧🇷</span><span id="ddi-code">+55</span><span class="ddi-caret" aria-hidden="true">▾</span>
+            </button>
+            <input id="i-whats" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="(11) 91234-5678">
+          </div>
+          <div class="ddi-pop" id="ddi-pop" hidden>
+            <input id="ddi-search" type="text" autocomplete="off" placeholder="Buscar país ou código (ex.: 351)">
+            <ul class="ddi-list" id="ddi-list" role="listbox"></ul>
+          </div>
+          <div class="hint" id="whats-hint">Com DDD, só números. Ex.: (11) 91234-5678</div>
+        </div>
         <div class="err" id="e-start"></div>
         <button class="btn btn-p full" type="submit">Começar o quiz →</button>
       </form>
@@ -374,32 +403,126 @@ function iniciar() {
   state.resp = new Array(QUIZ.perguntas.length).fill(null);
   try {
     const salvo = JSON.parse(localStorage.getItem('quiz-intensivao-aluna') || 'null');
-    if (salvo) { $('i-nome').value = salvo.nome || ''; $('i-email').value = salvo.email || ''; $('i-whats').value = salvo.whatsapp || ''; }
+    if (salvo) { $('i-nome').value = salvo.nome || ''; $('i-email').value = salvo.email || ''; if (salvo.whatsapp) preencherTelefone(salvo.whatsapp); }
   } catch (e) {}
   // a Cademí manda os dados da aluna logada na URL (cuser_name, cuser_email, cuser_phone)
-  const cad = { 'i-nome': params.get('cuser_name'), 'i-email': params.get('cuser_email'), 'i-whats': params.get('cuser_phone') };
+  const cad = { 'i-nome': params.get('cuser_name'), 'i-email': params.get('cuser_email') };
   Object.entries(cad).forEach(([id, v]) => { if (v && v.trim()) $(id).value = v.trim(); });
-  if (cad['i-whats']) $('i-whats').dispatchEvent(new Event('input'));
+  const telCad = params.get('cuser_phone');
+  if (telCad && telCad.replace(/\D/g, '').length >= 8) preencherTelefone(telCad);
   show('s-start');
 }
 
-$('i-whats').addEventListener('input', e => {
-  let d = e.target.value.replace(/\D/g, '').slice(0, 13);
-  if (d.length > 11 && d.startsWith('55')) d = d.slice(2); // DDI do Brasil
-  if (d.length > 11) { e.target.value = '+' + d; return; } // número com DDI
-  if (d.length > 6) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
-  else if (d.length > 2) e.target.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  else e.target.value = d;
+/* ---------- telefone com DDI ---------- */
+// [nome, sigla, DDI]: Brasil primeiro, depois em ordem alfabética
+const PAISES = [['Brasil','BR','55'],
+  ['África do Sul','ZA','27'],['Alemanha','DE','49'],['Angola','AO','244'],['Argentina','AR','54'],['Austrália','AU','61'],['Áustria','AT','43'],
+  ['Bélgica','BE','32'],['Bolívia','BO','591'],['Cabo Verde','CV','238'],['Canadá','CA','1'],['Chile','CL','56'],['China','CN','86'],
+  ['Colômbia','CO','57'],['Coreia do Sul','KR','82'],['Costa Rica','CR','506'],['Croácia','HR','385'],['Dinamarca','DK','45'],
+  ['Emirados Árabes Unidos','AE','971'],['Equador','EC','593'],['Escócia','GB','44'],['Espanha','ES','34'],['Estados Unidos','US','1'],
+  ['Filipinas','PH','63'],['Finlândia','FI','358'],['França','FR','33'],['Grécia','GR','30'],['Guatemala','GT','502'],['Guiana Francesa','GF','594'],
+  ['Holanda (Países Baixos)','NL','31'],['Hungria','HU','36'],['Índia','IN','91'],['Inglaterra (Reino Unido)','GB','44'],['Irlanda','IE','353'],
+  ['Israel','IL','972'],['Itália','IT','39'],['Japão','JP','81'],['Luxemburgo','LU','352'],['México','MX','52'],['Moçambique','MZ','258'],
+  ['Noruega','NO','47'],['Nova Zelândia','NZ','64'],['Panamá','PA','507'],['Paraguai','PY','595'],['Peru','PE','51'],['Polônia','PL','48'],
+  ['Portugal','PT','351'],['República Dominicana','DO','1'],['República Tcheca','CZ','420'],['Romênia','RO','40'],['Rússia','RU','7'],
+  ['Singapura','SG','65'],['Suécia','SE','46'],['Suíça','CH','41'],['Turquia','TR','90'],['Ucrânia','UA','380'],['Uruguai','UY','598'],
+  ['Venezuela','VE','58']];
+const bandeira = sigla => sigla ? sigla.replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt(0))) : '🌐';
+const semAcento = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const tel = { ddi: '55', sigla: 'BR' };
+
+function escolherDdi(ddi, sigla) {
+  tel.ddi = ddi; tel.sigla = sigla || '';
+  $('ddi-flag').textContent = bandeira(tel.sigla);
+  $('ddi-code').textContent = '+' + ddi;
+  const br = ddi === '55';
+  $('i-whats').placeholder = br ? '(11) 91234-5678' : 'Seu número com código de área';
+  $('whats-hint').textContent = br ? 'Com DDD, só números. Ex.: (11) 91234-5678' : 'Só números, com o código de área, sem o +' + ddi + '.';
+  formatarTelefone();
+}
+
+function formatarTelefone() {
+  const el = $('i-whats');
+  let d = el.value.replace(/\D/g, '');
+  if (tel.ddi === '55') {
+    if (d.length > 11 && d.startsWith('55')) d = d.slice(2); // colou com o +55
+    d = d.replace(/^0+/, '').slice(0, 11);                  // tira o 0 do DDD (011…)
+    if (d.length > 6) el.value = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
+    else if (d.length > 2) el.value = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    else el.value = d;
+  } else {
+    if (d.startsWith(tel.ddi) && d.length > 9) d = d.slice(tel.ddi.length); // colou com o DDI
+    el.value = d.slice(0, 14);
+  }
+}
+$('i-whats').addEventListener('input', formatarTelefone);
+
+// número completo no padrão da planilha: +5511912345678
+function telefoneCompleto() { return '+' + tel.ddi + $('i-whats').value.replace(/\D/g, ''); }
+function telefoneValido() {
+  const n = $('i-whats').value.replace(/\D/g, '');
+  // celular: DDD + 9 + 8 dígitos; fixo: DDD + 8 dígitos começando de 2 a 5
+  if (tel.ddi === '55') return /^[1-9][1-9](9\d{8}|[2-5]\d{7})$/.test(n);
+  return n.length >= 6 && n.length <= 14;
+}
+
+// recebe um número em qualquer formato (Cademí, preenchimento salvo) e separa DDI + número
+function preencherTelefone(bruto) {
+  const temMais = String(bruto).trim().startsWith('+');
+  let d = String(bruto).replace(/\D/g, '');
+  if (!temMais && (d.length === 10 || d.length === 11)) { escolherDdi('55', 'BR'); $('i-whats').value = d; formatarTelefone(); return; }
+  if (!temMais && d.startsWith('00')) d = d.slice(2);
+  const ddis = [...new Set(PAISES.map(p => p[2]))].sort((a, b) => b.length - a.length);
+  const ddi = ddis.find(x => d.startsWith(x) && d.length - x.length >= 6);
+  if (ddi) { const p = PAISES.find(p => p[2] === ddi); escolherDdi(ddi, p && p[1]); $('i-whats').value = d.slice(ddi.length); }
+  else { escolherDdi('55', 'BR'); $('i-whats').value = d; }
+  formatarTelefone();
+}
+
+let ativo = 0;
+function listarPaises() {
+  const q = $('ddi-search').value.trim();
+  const qd = q.replace(/\D/g, ''), qt = semAcento(q.replace(/[+\d]/g, '').trim());
+  let lista = PAISES.filter(p => (!qt || semAcento(p[0]).includes(qt)) && (!qd || p[2].startsWith(qd)));
+  const itens = lista.map(p => ({ nome: p[0], sigla: p[1], ddi: p[2] }));
+  if (qd && qd.length <= 4 && !PAISES.some(p => p[2] === qd)) itens.push({ nome: 'Usar outro código', sigla: '', ddi: qd });
+  ativo = 0;
+  $('ddi-list').innerHTML = itens.length ? itens.map((p, k) =>
+    `<li role="option" data-ddi="${p.ddi}" data-sigla="${p.sigla}" class="${k === 0 ? 'act' : ''}${p.ddi === tel.ddi && p.sigla === tel.sigla ? ' sel' : ''}"><span class="f">${bandeira(p.sigla)}</span><span>${esc(p.nome)}</span><span class="c">+${p.ddi}</span></li>`
+  ).join('') : '<li class="vazio">Nenhum país encontrado. Digite só o código (ex.: 351).</li>';
+}
+function abrirDdi(abrir) {
+  $('ddi-pop').hidden = !abrir;
+  $('ddi-btn').setAttribute('aria-expanded', abrir);
+  if (abrir) { $('ddi-search').value = ''; listarPaises(); $('ddi-search').focus(); }
+  avisarAltura();
+}
+$('ddi-btn').addEventListener('click', () => abrirDdi($('ddi-pop').hidden));
+$('ddi-search').addEventListener('input', listarPaises);
+$('ddi-search').addEventListener('keydown', e => {
+  const lis = [...document.querySelectorAll('#ddi-list li[data-ddi]')];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault(); if (!lis.length) return;
+    ativo = (ativo + (e.key === 'ArrowDown' ? 1 : -1) + lis.length) % lis.length;
+    lis.forEach((li, k) => li.classList.toggle('act', k === ativo)); lis[ativo].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault(); if (lis[ativo]) lis[ativo].click();
+  } else if (e.key === 'Escape') { abrirDdi(false); $('ddi-btn').focus(); }
 });
+$('ddi-list').addEventListener('click', e => {
+  const li = e.target.closest('li[data-ddi]'); if (!li) return;
+  escolherDdi(li.dataset.ddi, li.dataset.sigla); abrirDdi(false); $('i-whats').focus();
+});
+document.addEventListener('click', e => { if (!$('ddi-pop').hidden && !e.target.closest('#ddi-pop, #ddi-btn')) abrirDdi(false); });
 
 $('f-start').addEventListener('submit', e => {
   e.preventDefault();
-  const nome = $('i-nome').value.trim(), email = $('i-email').value.trim(), whats = $('i-whats').value.trim();
+  const nome = $('i-nome').value.trim(), email = $('i-email').value.trim(), whats = telefoneCompleto();
   const erros = [];
   ['i-nome', 'i-email', 'i-whats'].forEach(id => $(id).classList.remove('bad'));
   if (nome.split(/\s+/).length < 2 || nome.length < 4) { erros.push('Digite seu nome completo.'); $('i-nome').classList.add('bad'); }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { erros.push('Confira seu e-mail.'); $('i-email').classList.add('bad'); }
-  if (whats.replace(/\D/g, '').length < 10) { erros.push('Confira seu WhatsApp com DDD.'); $('i-whats').classList.add('bad'); }
+  if (!telefoneValido()) { erros.push(tel.ddi === '55' ? 'Confira seu WhatsApp: DDD + número, ex.: (11) 91234-5678.' : 'Confira seu WhatsApp: só números, com o código de área.'); $('i-whats').classList.add('bad'); }
   $('e-start').textContent = erros[0] || '';
   if (erros.length) return;
   Object.assign(state, { nome, email: email.toLowerCase(), whatsapp: whats, i: 0 });
