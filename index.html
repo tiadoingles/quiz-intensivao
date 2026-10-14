@@ -75,7 +75,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);-webkit-font-smoo
 .res-head h2 em{color:var(--red);font-style:normal;}
 .res-head p{color:var(--mut);font-size:15px;line-height:1.6;}
 .score{width:140px;height:140px;margin:18px auto 6px;position:relative;}
-.score svg{width:100%;height:100%;transform:rotate(-90deg);}
+.score canvas{width:100%;height:100%;display:block;}
 .score .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .score .n b{font-size:38px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.02em;}
 .score .n span{font-size:12.5px;color:var(--mut);font-weight:500;margin-top:4px;}
@@ -115,6 +115,8 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);-webkit-font-smoo
 /* modo PDF (html2pdf): mesma aparência da impressão */
 .pdf-mode .actions,.pdf-mode .no-print{display:none!important;}
 .pdf-mode .pdf-only{display:block;}
+/* o html2pdf copia a tela; sem isto a animação de entrada recomeça na cópia e o PDF sai apagado */
+.pdf-mode,.pdf-mode *{animation:none!important;transition:none!important;opacity:1!important;}
 </style>
 </head>
 <body>
@@ -365,7 +367,6 @@ function mensagem(nota) {
 function renderResultado(r) {
   const [tit, txt] = mensagem(r.nota);
   const primeiro = state.nome.split(/\s+/)[0];
-  const C = 2 * Math.PI * 64, off = C * (1 - r.nota / 100);
   const data = new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   $('res-body').innerHTML = `
     <div class="res-head">
@@ -373,8 +374,7 @@ function renderResultado(r) {
       <h2>${esc(tit)}, <em>${esc(primeiro)}!</em></h2>
       <p>${esc(txt)}</p>
       <div class="score">
-        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="64" fill="none" stroke="#f4f4f5" stroke-width="12"/>
-        <circle id="ring" cx="75" cy="75" r="64" fill="none" stroke="#f2133b" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" style="transition:stroke-dashoffset 1.1s ease"/></svg>
+        <canvas id="ring" width="300" height="300"></canvas>
         <div class="n"><b>${r.nota}</b><span>de 100 pontos</span></div>
       </div>
       <div class="stats"><span class="stat ok">✓ ${r.acertos} acerto${r.acertos === 1 ? '' : 's'}</span><span class="stat no">✗ ${r.total - r.acertos} erro${r.total - r.acertos === 1 ? '' : 's'}</span></div>
@@ -393,10 +393,32 @@ function renderResultado(r) {
         ${!x.ok && x.exp ? `<div class="rev-exp"><strong>Por quê?</strong>${esc(x.exp)}</div>` : ''}
       </div>`).join('')}
     <button class="btn btn-o full no-print" id="b-redo" type="button" style="margin-top:10px">↻ Refazer o quiz</button>`;
-  requestAnimationFrame(() => setTimeout(() => { const ring = $('ring'); if (ring) ring.style.strokeDashoffset = off; }, 60));
+  animarAnel($('ring'), r.nota);
   $('b-copy').onclick = copiar;
   $('b-pdf').onclick = baixarPdf;
   $('b-redo').onclick = () => { state.resp = new Array(QUIZ.perguntas.length).fill(null); state.i = 0; renderPergunta(); show('s-q'); };
+}
+
+/* Anel da nota em <canvas> (o gerador de PDF copia canvas, mas não desenha o anel em SVG) */
+function desenharAnel(cv, nota) {
+  if (!cv) return;
+  const ctx = cv.getContext('2d'), w = cv.width, c = w / 2, raio = w * 0.427, esp = w * 0.08;
+  ctx.clearRect(0, 0, w, w);
+  ctx.lineWidth = esp; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#f4f4f5'; ctx.beginPath(); ctx.arc(c, c, raio, 0, Math.PI * 2); ctx.stroke();
+  if (nota > 0) {
+    ctx.strokeStyle = '#f2133b'; ctx.beginPath();
+    ctx.arc(c, c, raio, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(nota, 100) / 100); ctx.stroke();
+  }
+}
+function animarAnel(cv, nota) {
+  const t0 = performance.now(), dur = 1100;
+  const passo = t => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    desenharAnel(cv, nota * e);
+    if (k < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
 }
 
 function textoResultado(r) {
@@ -441,8 +463,9 @@ async function baixarPdf() {
   const card = $('card');
   try {
     if (!window.html2pdf) await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
-    card.classList.add('pdf-mode');
-    const ring = $('ring'); if (ring) { ring.style.transition = 'none'; }
+    const res = $('s-res');
+    res.classList.add('pdf-mode');
+    desenharAnel($('ring'), RESULTADO.nota); // garante o anel completo no PDF
     const nomeArq = `${QUIZ.titulo} - ${state.nome}`.replace(/[\\/:*?"<>|]/g, '') + '.pdf';
     await html2pdf().set({
       margin: [10, 10, 12, 10], filename: nomeArq,
@@ -457,7 +480,7 @@ async function baixarPdf() {
     toast('Escolha "Salvar como PDF" na janela de impressão.');
     setTimeout(() => window.print(), 400);
   } finally {
-    card.classList.remove('pdf-mode');
+    $('s-res').classList.remove('pdf-mode');
     b.disabled = false; b.textContent = rot;
   }
 }
